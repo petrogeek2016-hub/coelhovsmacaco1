@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coelho vs Macaco RPG PRO</title>
+
+<style>
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: url("https://images.unsplash.com/photo-1501785888041-af3ef285b470") no-repeat center center/cover;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.game{
+    width:95%;
+    max-width:420px;
+    background:rgba(0,0,0,0.85);
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 0 30px #000;
+    text-align:center;
+    color:white;
+}
+
+.character-img{
+    width:120px;
+    height:120px;
+    object-fit:contain;
+    margin:10px auto;
+}
+
+.enemy-img{
+    width:140px;
+    height:140px;
+    object-fit:contain;
+    margin:10px auto;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin:6px 0;
+    border:none;
+    border-radius:12px;
+    font-weight:bold;
+    font-size:15px;
+    cursor:pointer;
+    background:#ffd54f;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#ffb300;
+    transform:scale(1.05);
+}
+
+.hidden{display:none;}
+
+.bar{
+    height:14px;
+    border-radius:10px;
+    margin:6px 0;
+}
+
+.enemy-bar{background:#ff5252;}
+.player-bar{background:#00e676;}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+<h1>🐰🐒 RPG PRO</h1>
+
+<div id="menu">
+    <button onclick="chooseClass('coelho')">🐰 Coelho Ágil</button>
+    <button onclick="chooseClass('macaco')">🐒 Macaco Forte</button>
+</div>
+
+<div id="hud" class="hidden">
+    ❤️ Vida: <span id="vida"></span><br>
+    ⚔️ Ataque: <span id="atk"></span><br>
+    ⭐ Ouro: <span id="gold"></span>
+    <img id="playerImg" class="character-img">
+</div>
+
+<div id="map" class="hidden">
+    <h3>🗺️ Escolha seu destino</h3>
+    <button onclick="battle()">⚔️ Batalha</button>
+    <button onclick="shop()">🛒 Loja</button>
+    <button onclick="rest()">🏕️ Descansar</button>
+</div>
+
+<div id="battle" class="hidden">
+    <h3 id="enemyName"></h3>
+    <img id="enemyImg" class="enemy-img">
+    <div class="bar enemy-bar" id="enemyHP"></div>
+    <div class="bar player-bar" id="playerHP"></div>
+    <button onclick="attack()">Atacar</button>
+</div>
+
+<div id="shop" class="hidden">
+    <h3>🛒 Loja</h3>
+    <button onclick="upgradeAtk()">+ Ataque (20 ouro)</button>
+    <button onclick="upgradeLife()">+ Vida (20 ouro)</button>
+    <button onclick="backMap()">Voltar</button>
+</div>
+
+<button onclick="resetGame()">🔄 Resetar</button>
+
+</div>
+
+<audio id="bgm" loop>
+<source src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9bce78.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+let player = {
+    classe:"",
+    vida:100,
+    maxVida:100,
+    atk:15,
+    gold:0
+};
+
+let enemy = {vida:0,maxVida:0};
+
+function chooseClass(tipo){
+    if(tipo==="coelho"){
+        player.classe="Coelho";
+        player.atk=12;
+        player.maxVida=90;
+        document.getElementById("playerImg").src="https://cdn-icons-png.flaticon.com/512/616/616408.png";
+    }else{
+        player.classe="Macaco";
+        player.atk=18;
+        player.maxVida=120;
+        document.getElementById("playerImg").src="https://cdn-icons-png.flaticon.com/512/616/616430.png";
+    }
+
+    player.vida=player.maxVida;
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("hud").classList.remove("hidden");
+    document.getElementById("map").classList.remove("hidden");
+    document.getElementById("bgm").play();
+    updateHUD();
+    saveGame();
+}
+
+function updateHUD(){
+    document.getElementById("vida").innerText=player.vida+"/"+player.maxVida;
+    document.getElementById("atk").innerText=player.atk;
+    document.getElementById("gold").innerText=player.gold;
+}
+
+function battle(){
+    document.getElementById("map").classList.add("hidden");
+    document.getElementById("battle").classList.remove("hidden");
+
+    enemy.maxVida=80+Math.floor(Math.random()*40);
+    enemy.vida=enemy.maxVida;
+
+    document.getElementById("enemyName").innerText="👹 Inimigo Selvagem";
+    document.getElementById("enemyImg").src="https://cdn-icons-png.flaticon.com/512/616/616494.png";
+
+    updateBars();
+}
+
+function attack(){
+    enemy.vida-=player.atk;
+    player.vida-=10;
+
+    if(enemy.vida<=0){
+        player.gold+=20;
+        backMap();
+    }
+
+    if(player.vida<=0){
+        alert("Game Over!");
+        resetGame();
+    }
+
+    updateBars();
+    updateHUD();
+    saveGame();
+}
+
+function updateBars(){
+    document.getElementById("enemyHP").style.width=(enemy.vida/enemy.maxVida*100)+"%";
+    document.getElementById("playerHP").style.width=(player.vida/player.maxVida*100)+"%";
+}
+
+function shop(){
+    document.getElementById("map").classList.add("hidden");
+    document.getElementById("shop").classList.remove("hidden");
+}
+
+function upgradeAtk(){
+    if(player.gold>=20){
+        player.gold-=20;
+        player.atk+=5;
+        updateHUD();
+        saveGame();
+    }
+}
+
+function upgradeLife(){
+    if(player.gold>=20){
+        player.gold-=20;
+        player.maxVida+=20;
+        player.vida=player.maxVida;
+        updateHUD();
+        saveGame();
+    }
+}
+
+function rest(){
+    player.vida=player.maxVida;
+    updateHUD();
+    saveGame();
+}
+
+function backMap(){
+    document.getElementById("battle").classList.add("hidden");
+    document.getElementById("shop").classList.add("hidden");
+    document.getElementById("map").classList.remove("hidden");
+}
+
+function saveGame(){
+    localStorage.setItem("rpgSave",JSON.stringify(player));
+}
+
+function loadGame(){
+    let save=localStorage.getItem("rpgSave");
+    if(save){
+        player=JSON.parse(save);
+        document.getElementById("menu").classList.add("hidden");
+        document.getElementById("hud").classList.remove("hidden");
+        document.getElementById("map").classList.remove("hidden");
+        updateHUD();
+    }
+}
+
+function resetGame(){
+    localStorage.removeItem("rpgSave");
+    location.reload();
+}
+
+loadGame();
+</script>
+
+</body>
+</html>
